@@ -6,7 +6,6 @@ local startTime = tick()  -- Get the initial time when the script starts
 local startCashValue = Players.LocalPlayer.leaderstats.Money.Value  -- Get the initial cash value when the script starts
 
 local lastCashValue = startCashValue
-local formattedLastCashValue = tostring(lastCashValue):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 
 -- Function to send a webhook message
 local function sendWebhook(content)
@@ -54,6 +53,7 @@ local function sendCashChangeAlert()
     local newCashValue = Players.LocalPlayer.leaderstats.Money.Value
     
     local formattedNewCashValue = tostring(newCashValue):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    local formattedLastCashValue = tostring(lastCashValue):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
     
     local cashChange = newCashValue - lastCashValue
     local formattedCashChange = tostring(cashChange):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
@@ -65,11 +65,10 @@ local function sendCashChangeAlert()
 
     local formattedTime = string.format("%d minutes, %d seconds", minutes, seconds)
 
-    local userInformation = string.format("User:\n\nUsername:\n```%s```\n\nDisplay Name:\n```%s```\n\nUser ID:\n```%s```\n\nHWID:\n```%s```",
-                                          playerName, playerDisplayName, userId, hwid)
+    local incomePerMinute = (newCashValue - startCashValue) / elapsedTime * 60
+    local formattedIncome = string.format("%.2f", incomePerMinute)
 
-    local cashDetails = string.format("Cash Details:\n\nOld Cash Value:\n```%s```\n\nNew Cash Value:\n```%s```\n\nChange:\n```%s```",
-                                      formattedLastCashValue, formattedNewCashValue, formattedCashChange)
+    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
 
     local data = {
         content = "",
@@ -80,19 +79,24 @@ local function sendCashChangeAlert()
             color = tonumber(0x00FF00),  -- Green color
             fields = {
                 {
-                    name = "User:",
-                    value = userInformation,
+                    name = "User Information:",
+                    value = string.format("```Username: %s\nDisplay Name: %s\nUser ID: %s\nHWID: %s```", playerName, playerDisplayName, userId, hwid),
                     inline = false
                 },
                 {
                     name = "Cash Details:",
-                    value = cashDetails,
+                    value = string.format("```New Cash Value: %s\nOld Cash Value: %s\nChange: %s```", formattedNewCashValue, formattedLastCashValue, formattedCashChange),
                     inline = false
                 },
                 {
-                    name = "Elapsed Time:",
-                    value = string.format("```%s```", formattedTime),  -- Display elapsed time in code block
-                    inline = false
+                    name = "Income Per Minute:",
+                    value = string.format("```%s```", formattedIncome),
+                    inline = true
+                },
+                {
+                    name = "Ping:",
+                    value = string.format("```%s```", ping),
+                    inline = true
                 }
             },
             -- Add the player's avatar image as a thumbnail
