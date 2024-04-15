@@ -89,13 +89,18 @@ local function sendCashChangeAlert()
                     inline = false
                 },
                 {
-                    name = "Income Per Minute:",
-                    value = string.format("```%s```", formattedIncome),
+                    name = "Time Elapsed:",
+                    value = string.format("```%s```", formattedTime),
                     inline = true
                 },
                 {
                     name = "Ping:",
                     value = string.format("```%s```", ping),
+                    inline = true
+                },
+                {
+                    name = "Income Per Minute:",
+                    value = string.format("```%s```", formattedIncome),
                     inline = true
                 }
             },
