@@ -1,0 +1,29 @@
+import requests
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+def get_avatar_url(user_id):
+    url = f"https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=48x48&format=Png&isCircular=false"
+    response = requests.get(url)
+    data = response.json()
+    if "data" in data:
+        avatar_url = data["data"][0]["imageUrl"]
+        return avatar_url
+    else:
+        return None
+
+@app.route("/")
+def fetch_avatar_url():
+    user_id = request.args.get("userId")
+    if user_id:
+        avatar_url = get_avatar_url(user_id)
+        if avatar_url:
+            return jsonify({"avatarUrl": avatar_url})
+        else:
+            return jsonify({"error": "Avatar URL not found"}), 404
+    else:
+        return jsonify({"error": "User ID not provided"}), 400
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
