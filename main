@@ -1,0 +1,124 @@
+local Players = game:GetService("Players")
+local http = game:GetService("HttpService")
+local webhook = "https://discord.com/api/webhooks/969986002208837642/_wPGBCUc3cuF8az3DQoDk9xe8nIls6iBAhs8EApYk36sGqAcBxjw1YIhQ0h7lxaVOog8" -- Replace this with your webhook URL
+
+local startTime = tick()  -- Get the initial time when the script starts
+local startCashValue = Players.LocalPlayer.leaderstats.Money.Value  -- Get the initial cash value when the script starts
+
+local lastCashValue = startCashValue
+local formattedLastCashValue = tostring(lastCashValue):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+
+-- Function to send a webhook message
+local function sendWebhook(content)
+    local data = {
+        content = content
+    }
+    local requestBody = http:JSONEncode(data)
+
+    local s = request({
+        Url = webhook,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = requestBody
+    })
+
+    table.foreach(s,print)
+end
+
+-- Function to handle player joining
+local function onPlayerAdded(player)
+    local playerName = player.Name
+    local content = string.format("Player %s has joined the server", playerName)
+    sendWebhook(content)
+end
+
+-- Function to handle player leaving
+local function onPlayerRemoving(player)
+    local playerName = player.Name
+    local content = string.format("Player %s has left the server", playerName)
+    sendWebhook(content)
+end
+
+-- Connect event handlers for player join and leave
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+-- Function to create cash change alert and send webhook
+local function sendCashChangeAlert()
+    local playerName = Players.LocalPlayer.Name
+    local playerDisplayName = Players.LocalPlayer.DisplayName
+    local userId = Players.LocalPlayer.UserId
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    local newCashValue = Players.LocalPlayer.leaderstats.Money.Value
+    
+    local formattedNewCashValue = tostring(newCashValue):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    
+    local cashChange = newCashValue - lastCashValue
+    local formattedCashChange = tostring(cashChange):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+
+    local formattedTime = string.format("%d minutes, %d seconds", minutes, seconds)  -- Remove decimal points
+
+    local userInformation = string.format("User:\n\nUsername:\n```%s```\n\nDisplay Name:\n```%s```\n\nUser ID:\n```%s```\n\nHWID:\n```%s```",
+                                          playerName, playerDisplayName, userId, hwid)
+
+    local cashDetails = string.format("Cash Details:\n\nOld Cash Value:\n```%s```\n\nNew Cash Value:\n```%s```\n\nChange:\n```%s```",
+                                      formattedLastCashValue, formattedNewCashValue, formattedCashChange)
+
+    local data = {
+        content = "",
+        embeds = {{
+            title = "Cash Change Alert",
+            description = "Detected changes in cash value",
+            type = "rich",
+            color = tonumber(0x00FF00),  -- Green color
+            fields = {
+                {
+                    name = "User:",
+                    value = userInformation,
+                    inline = false
+                },
+                {
+                    name = "Cash Details:",
+                    value = cashDetails,
+                    inline = false
+                }
+            },
+            -- Add the player's avatar image as a thumbnail
+            thumbnail = {
+                url = "https://i.pinimg.com/236x/c0/88/c3/c088c3e75b251a51cae1fca084cb581a.jpg"
+            },
+            -- Add the footer with the provided image URL and message
+            footer = {
+                text = "My efforts!",
+                icon_url = "https://i.pinimg.com/236x/19/b6/00/19b600c0cd325e8d2b94aab4cb80685e.jpg"
+            }
+        }}
+    }
+
+    local requestBody = http:JSONEncode(data)
+
+    local s = request({
+        Url = webhook,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = requestBody
+    })
+
+    table.foreach(s,print)
+end
+
+-- Set the function in getgenv
+getgenv().onCashChangeAlert = sendCashChangeAlert
+
+-- Execute the cash change alert initially
+getgenv().onCashChangeAlert()
+
+-- Run the cash change alert every 1 minute
+while true do
+    wait(60)
+    getgenv().onCashChangeAlert()
+end
