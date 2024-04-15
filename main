@@ -58,7 +58,12 @@ local function sendCashChangeAlert()
     local cashChange = newCashValue - lastCashValue
     local formattedCashChange = tostring(cashChange):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 
-    local formattedTime = string.format("%d minutes, %d seconds", minutes, seconds)  -- Remove decimal points
+    local elapsedTime = tick() - startTime  -- Calculate elapsed time since the script started
+
+    local minutes = math.floor(elapsedTime / 60)
+    local seconds = math.floor(elapsedTime % 60)
+
+    local formattedTime = string.format("%d minutes, %d seconds", minutes, seconds)
 
     local userInformation = string.format("User:\n\nUsername:\n```%s```\n\nDisplay Name:\n```%s```\n\nUser ID:\n```%s```\n\nHWID:\n```%s```",
                                           playerName, playerDisplayName, userId, hwid)
@@ -82,6 +87,11 @@ local function sendCashChangeAlert()
                 {
                     name = "Cash Details:",
                     value = cashDetails,
+                    inline = false
+                },
+                {
+                    name = "Elapsed Time:",
+                    value = string.format("```%s```", formattedTime),  -- Display elapsed time in code block
                     inline = false
                 }
             },
