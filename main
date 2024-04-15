@@ -2,12 +2,11 @@ local Players = game:GetService("Players")
 local http = game:GetService("HttpService")
 local webhook = "https://discord.com/api/webhooks/969986002208837642/_wPGBCUc3cuF8az3DQoDk9xe8nIls6iBAhs8EApYk36sGqAcBxjw1YIhQ0h7lxaVOog8" -- Replace this with your webhook URL
 
-local startTime = tick()  -- Get the initial time when the script starts
-local startCashValue = Players.LocalPlayer.leaderstats.Money.Value  -- Get the initial cash value when the script starts
+local startTime = tick()
+local startCashValue = Players.LocalPlayer.leaderstats.Money.Value
 
 local lastCashValue = startCashValue
 
--- Function to send a webhook message
 local function sendWebhook(content)
     local data = {
         content = content
@@ -26,25 +25,6 @@ local function sendWebhook(content)
     table.foreach(s,print)
 end
 
--- Function to handle player joining
-local function onPlayerAdded(player)
-    local playerName = player.Name
-    local content = string.format("Player %s has joined the server", playerName)
-    sendWebhook(content)
-end
-
--- Function to handle player leaving
-local function onPlayerRemoving(player)
-    local playerName = player.Name
-    local content = string.format("Player %s has left the server", playerName)
-    sendWebhook(content)
-end
-
--- Connect event handlers for player join and leave
-Players.PlayerAdded:Connect(onPlayerAdded)
-Players.PlayerRemoving:Connect(onPlayerRemoving)
-
--- Function to create cash change alert and send webhook
 local function sendCashChangeAlert()
     local playerName = Players.LocalPlayer.Name
     local playerDisplayName = Players.LocalPlayer.DisplayName
@@ -58,16 +38,11 @@ local function sendCashChangeAlert()
     local cashChange = newCashValue - lastCashValue
     local formattedCashChange = tostring(cashChange):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 
-    local elapsedTime = tick() - startTime  -- Calculate elapsed time since the script started
-
-    local minutes = math.floor(elapsedTime / 60)
-    local seconds = math.floor(elapsedTime % 60)
-
-    local formattedTime = string.format("%d minutes, %d seconds", minutes, seconds)
-
-    local incomePerMinute = (newCashValue - startCashValue) / elapsedTime * 60
+    local elapsedTime = tick() - startTime
+    local minutes = elapsedTime / 60
+    local incomePerMinute = (newCashValue - startCashValue) / minutes
     local formattedIncome = string.format("%.2f", incomePerMinute)
-
+    local formattedTime = string.format("%.0f minutes, %.0f seconds", math.floor(minutes), math.floor(elapsedTime % 60))
     local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
 
     local data = {
@@ -76,7 +51,7 @@ local function sendCashChangeAlert()
             title = "Cash Change Alert",
             description = "Detected changes in cash value",
             type = "rich",
-            color = tonumber(0x00FF00),  -- Green color
+            color = tonumber(0x00FF00),
             fields = {
                 {
                     name = "User Information:",
@@ -104,11 +79,9 @@ local function sendCashChangeAlert()
                     inline = true
                 }
             },
-            -- Add the player's avatar image as a thumbnail
             thumbnail = {
                 url = "https://i.pinimg.com/236x/c0/88/c3/c088c3e75b251a51cae1fca084cb581a.jpg"
             },
-            -- Add the footer with the provided image URL and message
             footer = {
                 text = "My efforts!",
                 icon_url = "https://i.pinimg.com/236x/19/b6/00/19b600c0cd325e8d2b94aab4cb80685e.jpg"
@@ -130,13 +103,10 @@ local function sendCashChangeAlert()
     table.foreach(s,print)
 end
 
--- Set the function in getgenv
 getgenv().onCashChangeAlert = sendCashChangeAlert
 
--- Execute the cash change alert initially
 getgenv().onCashChangeAlert()
 
--- Run the cash change alert every 1 minute
 while true do
     wait(60)
     getgenv().onCashChangeAlert()
